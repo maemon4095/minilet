@@ -1,0 +1,7 @@
+[package]
+name = "minilet-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+parcom = { git = "https://github.com/maemon4095/parcom.git", branch = "release/v0.4.0" }
