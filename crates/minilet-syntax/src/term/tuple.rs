@@ -1,30 +1,33 @@
 use crate::{
-    expr::{Expr, ParseExprError},
-    token, Parse, Span, Trivia,
+    expr::Expr,
+    punctured::{ParsePuncturedError, Punctured},
+    relaxed::Relaxed,
+    token::{self, Comma},
+    InputStream, Parse, Span, Trivia,
 };
 use parcom::{
     ParseResult::{Done, Fail, Fatal},
     ShouldNeverExtension,
 };
 #[derive(Debug)]
-pub struct Parenthesized {
+pub struct Tuple {
     pub lparen: token::LParen,
     pub ltrivia: Trivia,
-    pub expr: Expr,
+    pub items: Punctured<Expr, Relaxed<token::Comma>>,
     pub rtrivia: Trivia,
     pub rparen: token::RParen,
 }
 
-impl Parse for Parenthesized {
-    type Error = ParseParenthesizedError;
-    type Fatal = ParseParenthesizedError;
+impl Parse for Tuple {
+    type Error = ParseTupleError;
+    type Fatal = ParseTupleError;
 
-    async fn parse<S: crate::InputStream>(
+    async fn parse<S: InputStream>(
         input: S,
     ) -> parcom::ParseResult<S, Self, Self::Error, Self::Fatal> {
         let (lparen, rest) = match token::LParen::parse(input).await {
             Done(v, r) => (v, r),
-            Fail(e, r) => return Fail(ParseParenthesizedError::MissingOpeningParen(e.span), r),
+            Fail(e, r) => return Fail(ParseTupleError::MissingOpeningParen(e.span), r),
             Fatal(e, _) => e.never(),
         };
 
@@ -33,10 +36,10 @@ impl Parse for Parenthesized {
             Fail(e, _) | Fatal(e, _) => e.never(),
         };
 
-        let (expr, rest) = match Expr::parse(rest).await {
+        let (items, rest) = match Punctured::parse(rest).await {
             Done(v, r) => (v, r),
-            Fail(e, r) => return Fatal(ParseParenthesizedError::Expr(e), r),
-            Fatal(e, r) => return Fatal(ParseParenthesizedError::Expr(e), r),
+            Fail(e, _) => e.never(),
+            Fatal(e, r) => return Fatal(ParseTupleError::Punct(e), r),
         };
 
         let (rtrivia, rest) = match Trivia::parse(rest).await {
@@ -46,14 +49,14 @@ impl Parse for Parenthesized {
 
         let (rparen, rest) = match token::RParen::parse(rest).await {
             Done(v, r) => (v, r),
-            Fail(e, r) => return Fatal(ParseParenthesizedError::MissingOpeningParen(e.span), r),
+            Fail(e, r) => return Fatal(ParseTupleError::MissingOpeningParen(e.span), r),
             Fatal(e, _) => e.never(),
         };
 
-        let me = Parenthesized {
+        let me = Tuple {
             lparen,
             ltrivia,
-            expr,
+            items,
             rtrivia,
             rparen,
         };
@@ -62,8 +65,8 @@ impl Parse for Parenthesized {
 }
 
 #[derive(Debug)]
-pub enum ParseParenthesizedError {
+pub enum ParseTupleError {
     MissingOpeningParen(Span),
     MissingClosingParen(Span),
-    Expr(ParseExprError),
+    Punct(ParsePuncturedError<Expr, Relaxed<Comma>>),
 }

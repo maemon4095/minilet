@@ -1,14 +1,15 @@
 use crate::{
     punctured::{ParsePuncturedError, Punctured},
+    relaxed::Relaxed,
     stmt::Stmt,
     token::{ParseTokenError, Semi},
-    Expr, Parse, Trivia,
+    Expr, InputStream, Parse, Trivia,
 };
 use parcom::prelude::*;
 
 #[derive(Debug)]
 pub struct Stmts {
-    pub stmts: Punctured<Stmt, StmtSeparator>,
+    pub stmts: Punctured<Stmt, Relaxed<Semi>>,
     pub trailing_semi: Option<(Trivia, Semi)>,
 }
 
@@ -29,7 +30,7 @@ impl Parse for Stmts {
     type Error = Never;
     type Fatal = ParseStmtsError;
 
-    async fn parse<S: crate::InputStream>(
+    async fn parse<S: InputStream>(
         input: S,
     ) -> parcom::ParseResult<S, Self, Self::Error, Self::Fatal> {
         let (stmts, rest) = match Punctured::parse(input).await {
@@ -61,7 +62,7 @@ impl Parse for Stmts {
 
 #[derive(Debug)]
 pub enum ParseStmtsError {
-    Punctured(ParsePuncturedError<Stmt, StmtSeparator>),
+    Punctured(ParsePuncturedError<Stmt, Relaxed<Semi>>),
 }
 
 #[derive(Debug)]
@@ -80,9 +81,7 @@ impl Parse for StmtSeparator {
     type Error = ParseStmtSeparatorError;
     type Fatal = Never;
 
-    async fn parse<S: crate::InputStream>(
-        input: S,
-    ) -> ParseResult<S, Self, Self::Error, Self::Fatal> {
+    async fn parse<S: InputStream>(input: S) -> ParseResult<S, Self, Self::Error, Self::Fatal> {
         let (leading_trivia, rest) = match Trivia::parse(input).await {
             Done(v, r) => (v, r),
             Fail(e, _) | Fatal(e, _) => e.never(),

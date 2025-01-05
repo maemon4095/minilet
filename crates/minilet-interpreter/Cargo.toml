@@ -6,3 +6,7 @@ edition = "2021"
 [dependencies]
 minilet-syntax = { path = "../minilet-syntax" }
 minilet-utils = { path = "../minilet-utils" }
+parcom.workspace = true
+
+[dev-dependencies]
+pollster.workspace = true

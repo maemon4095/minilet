@@ -159,6 +159,7 @@ declare_short_tokens![
     LBrace   = '{';
     RBrace   = '}';
     Eq       = '=';
+    Comma    = ',';
 ];
 
 declare_tokens![

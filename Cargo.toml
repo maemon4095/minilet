@@ -4,3 +4,4 @@ resolver = "2"
 
 [workspace.dependencies]
 parcom = { git = "https://github.com/maemon4095/parcom.git", branch = "release/v0.4.0" }
+pollster = "0.4.0"

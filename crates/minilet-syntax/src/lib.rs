@@ -5,6 +5,7 @@ pub mod expr;
 pub mod literal;
 pub mod op;
 pub mod punctured;
+pub mod relaxed;
 pub mod spacing;
 pub mod stmt;
 pub mod stmts;
@@ -21,7 +22,7 @@ pub use spacing::Spacing;
 pub use span::Span;
 pub use stmt::Stmt;
 pub use stmts::Stmts;
-pub use term::{Ident, Parenthesized, Term, Unary};
+pub use term::{Ident, Term, Tuple, Unary};
 pub use trivia::Trivia;
 
 pub trait Parse: Sized {

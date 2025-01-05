@@ -5,6 +5,3 @@ edition = "2021"
 
 [dependencies]
 parcom.workspace = true
-
-[dev-dependencies]
-pollster = "0.4.0"

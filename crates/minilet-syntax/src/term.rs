@@ -1,6 +1,6 @@
 pub mod block;
 pub mod ident;
-pub mod parenthesized;
+pub mod tuple;
 pub mod unary;
 
 use crate::{
@@ -9,20 +9,20 @@ use crate::{
 };
 use block::{Block, ParseBlockError};
 use parcom::{
-    ParseResult::{Done, Fail, Fatal},
+    ParseResult::{self, Done, Fail, Fatal},
     ShouldNeverExtension,
 };
-use parenthesized::ParseParenthesizedError;
 use std::future::Future;
+use tuple::ParseTupleError;
 use unary::ParseUnaryError;
 
 pub use ident::Ident;
-pub use parenthesized::Parenthesized;
+pub use tuple::Tuple;
 pub use unary::Unary;
 
 #[derive(Debug)]
 pub enum Term {
-    Parenthesized(Parenthesized),
+    Tuple(Tuple),
     Literal(Literal),
     Ident(Ident),
     Unary(Box<Unary>),
@@ -35,7 +35,7 @@ impl Parse for Term {
 
     fn parse<S: crate::InputStream>(
         input: S,
-    ) -> impl Future<Output = parcom::ParseResult<S, Self, <Self as Parse>::Error, <Self as Parse>::Fatal>>
+    ) -> impl Future<Output = ParseResult<S, Self, <Self as Parse>::Error, <Self as Parse>::Fatal>>
     {
         Box::pin(async {
             let anchor = input.anchor();
@@ -62,9 +62,9 @@ impl Parse for Term {
             };
 
             let anchor = input.anchor();
-            let input = match Parenthesized::parse(input).await {
+            let input = match Tuple::parse(input).await {
                 Done(v, r) => {
-                    let me = Self::Parenthesized(v);
+                    let me = Self::Tuple(v);
                     return Done(me, r);
                 }
 
@@ -99,7 +99,7 @@ impl Parse for Term {
 #[derive(Debug)]
 pub enum ParseTermError {
     Unary(Box<ParseUnaryError>),
-    Parenthesized(ParseParenthesizedError),
+    Parenthesized(ParseTupleError),
     Literal(ParseLiteralError),
     Block(ParseBlockError),
 }
