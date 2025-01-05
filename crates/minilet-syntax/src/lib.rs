@@ -13,34 +13,16 @@ pub mod token;
 pub mod trivia;
 pub mod unary_op;
 
-use std::marker::PhantomData;
-
-use parcom::{metrics::LineColumn, ParseResult, ParseStream, Parser};
+use parcom::{metrics::LineColumn, ParseResult, ParseStream};
 
 pub use expr::Expr;
 pub use literal::Literal;
 pub use spacing::Spacing;
 pub use span::Span;
+pub use stmt::Stmt;
+pub use stmts::Stmts;
 pub use term::{Ident, Parenthesized, Term, Unary};
 pub use trivia::Trivia;
-
-pub struct MiniLetExprParser {
-    mark: PhantomData<()>,
-}
-
-impl<S: InputStream> Parser<S> for MiniLetExprParser {
-    type Output = Expr;
-    type Error = expr::ParseExprError;
-    type Fault = expr::ParseExprError;
-
-    fn parse(
-        &self,
-        input: S,
-    ) -> impl std::future::Future<Output = ParseResult<S, Self::Output, Self::Error, Self::Fault>>
-    {
-        Expr::parse(input)
-    }
-}
 
 pub trait Parse: Sized {
     type Error;

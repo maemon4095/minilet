@@ -1,15 +1,13 @@
 mod bind;
-mod expr;
 
-use crate::Parse;
+use crate::{expr::ParseExprError, Expr, Parse};
 use bind::{ParseStmtLetError, StmtLet};
-use expr::{ParseStmtExprError, StmtExpr};
 use parcom::prelude::*;
 
 #[derive(Debug)]
 pub enum Stmt {
     Let(StmtLet),
-    Expr(StmtExpr),
+    Expr(Expr),
 }
 
 impl Parse for Stmt {
@@ -30,7 +28,7 @@ impl Parse for Stmt {
             }
         };
 
-        match StmtExpr::parse(input).await {
+        match Expr::parse(input).await {
             Done(v, r) => Done(Stmt::Expr(v), r),
             Fail(e, r) => Fail(ParseStmtError::Expr(e), r),
             Fatal(e, r) => Fatal(ParseStmtError::Expr(e), r),
@@ -40,6 +38,6 @@ impl Parse for Stmt {
 
 #[derive(Debug)]
 pub enum ParseStmtError {
-    Expr(ParseStmtExprError),
+    Expr(ParseExprError),
     Let(ParseStmtLetError),
 }

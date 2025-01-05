@@ -2,14 +2,27 @@ use crate::{
     punctured::{ParsePuncturedError, Punctured},
     stmt::Stmt,
     token::{ParseTokenError, Semi},
-    Parse, Trivia,
+    Expr, Parse, Trivia,
 };
 use parcom::prelude::*;
 
 #[derive(Debug)]
 pub struct Stmts {
     pub stmts: Punctured<Stmt, StmtSeparator>,
-    pub trailing_semi: Option<Semi>,
+    pub trailing_semi: Option<(Trivia, Semi)>,
+}
+
+impl Stmts {
+    pub fn last_expr(&self) -> Option<&Expr> {
+        if self.trailing_semi.is_some() {
+            return None;
+        }
+
+        match self.stmts.last() {
+            Some(Stmt::Expr(e)) => Some(&e),
+            _ => None,
+        }
+    }
 }
 
 impl Parse for Stmts {
@@ -26,8 +39,13 @@ impl Parse for Stmts {
         };
 
         let anchor = rest.anchor();
+        let (trivia, rest) = match Trivia::parse(rest).await {
+            Done(v, r) => (v, r),
+            Fail(e, _) | Fatal(e, _) => e.never(),
+        };
+
         let (trailing_semi, rest) = match Semi::parse(rest).await {
-            Done(v, r) => (Some(v), r),
+            Done(v, r) => (Some((trivia, v)), r),
             Fail(_, r) => (None, r.rewind(anchor)),
             Fatal(e, _) => e.never(),
         };

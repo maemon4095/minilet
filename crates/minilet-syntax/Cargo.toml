@@ -1,5 +1,5 @@
 [package]
-name = "minilet-parser"
+name = "minilet-syntax"
 version = "0.1.0"
 edition = "2021"
 
