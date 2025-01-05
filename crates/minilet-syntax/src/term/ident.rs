@@ -24,11 +24,11 @@ impl Parse for Ident {
                 Done(c, r) => {
                     if buf.is_empty() {
                         if !c.is_ascii_alphabetic() {
-                            break r;
+                            break r.rewind(anchor);
                         }
                     } else {
                         if !c.is_ascii_alphanumeric() {
-                            break r;
+                            break r.rewind(anchor);
                         }
                     }
 
